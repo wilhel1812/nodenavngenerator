@@ -1,0 +1,3 @@
+[submodule "vendor/norske-kommuneforkortelser"]
+	path = vendor/norske-kommuneforkortelser
+	url = https://github.com/wilhel1812/norske-kommuneforkortelser.git

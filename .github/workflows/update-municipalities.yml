@@ -1,0 +1,63 @@
+name: Update municipality dependency
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: dependency
+        name: Check for a newer municipality register
+        shell: bash
+        run: |
+          git -C vendor/norske-kommuneforkortelser fetch origin main
+          current="$(git -C vendor/norske-kommuneforkortelser rev-parse HEAD)"
+          latest="$(git -C vendor/norske-kommuneforkortelser rev-parse origin/main)"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "short=${latest:0:7}" >> "$GITHUB_OUTPUT"
+          if [[ "$current" != "$latest" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.dependency.outputs.changed == 'true'
+        name: Update dependency and project patch version
+        shell: bash
+        run: |
+          git -C vendor/norske-kommuneforkortelser checkout "${{ steps.dependency.outputs.latest }}"
+          npm version patch --no-git-tag-version
+          npm run check
+          npm run build
+      - if: steps.dependency.outputs.changed == 'true'
+        name: Open and auto-merge the update
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: deps/municipalities-${{ steps.dependency.outputs.short }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add vendor/norske-kommuneforkortelser package.json package-lock.json
+          git commit -m "chore(deps): update municipalities and bump version"
+          git push --set-upstream origin "$BRANCH"
+          gh pr create \
+            --title "chore(deps): update municipalities and bump version" \
+            --body "Updates the pinned municipality register to ${{ steps.dependency.outputs.latest }}, validates it, and bumps the patch version."
+          gh workflow run ci.yml --ref "$BRANCH"
+          gh pr merge "$BRANCH" --auto --squash --delete-branch
