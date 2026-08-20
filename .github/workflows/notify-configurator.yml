@@ -1,0 +1,28 @@
+name: Notify node configurator
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch generator release
+        env:
+          CONFIGURATOR_DISPATCH_TOKEN: ${{ secrets.CONFIGURATOR_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$CONFIGURATOR_DISPATCH_TOKEN" ]; then
+            echo "CONFIGURATOR_DISPATCH_TOKEN is not configured; the configurator's daily poll remains the fallback."
+            exit 0
+          fi
+          curl --fail-with-body --request POST \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $CONFIGURATOR_DISPATCH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/wilhel1812/meshtastic-node-configurator/dispatches \
+            --data '{"event_type":"nodenavngenerator-release"}'
