@@ -34,3 +34,10 @@ npm run build
 
 Meshtastic® er et registrert varemerke som tilhører Meshtastic LLC. Dette
 uavhengige prosjektet er ikke tilknyttet eller godkjent av Meshtastic LLC.
+
+## Lisens
+
+GPL-3.0-only. Se [LICENSE](LICENSE).
+
+Utgivelser kan varsle nodekonfiguratoren umiddelbart når repository-hemmeligheten
+`CONFIGURATOR_DISPATCH_TOKEN` er satt. Konfiguratorens daglige kontroll er fallback.
