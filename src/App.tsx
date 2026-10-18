@@ -115,7 +115,7 @@ export default function App() {
 
           <a
             className="help-link"
-            href="https://meshwiki.no/meshtastic/navnekonvensjon"
+            href="https://github.com/wilhel1812/nodenavngenerator#readme"
             target="_blank"
             rel="noreferrer"
             aria-label={text.convention}
