@@ -81,11 +81,13 @@ h1 {
 .header-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 12px;
 }
 
 .language-control select,
-.theme-control,
+.segmented-control,
 .help-link {
   min-height: 42px;
   border: 1px solid var(--border);
@@ -99,12 +101,12 @@ h1 {
   padding: 0 34px 0 12px;
 }
 
-.theme-control {
+.segmented-control {
   display: flex;
   padding: 3px;
 }
 
-.theme-control button,
+.segmented-control button,
 .help-link {
   display: inline-grid;
   place-items: center;
@@ -115,13 +117,20 @@ h1 {
   color: var(--muted);
 }
 
-.theme-control button {
+.segmented-control button {
   min-height: 34px;
 }
 
-.theme-control button.active {
+.segmented-control button[aria-pressed="true"] {
   background: var(--text);
   color: var(--background);
+}
+
+.mode-control button {
+  width: auto;
+  padding-inline: 10px;
+  font-size: 0.85rem;
+  font-weight: 650;
 }
 
 .theme-control svg,
@@ -138,22 +147,14 @@ h1 {
 .form-grid {
   display: grid;
   grid-template-columns:
-    minmax(160px, 0.85fr) minmax(210px, 1.15fr) minmax(230px, 1.4fr)
-    minmax(180px, 1fr) minmax(150px, 0.85fr);
+    minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.25fr)
+    minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.85fr);
   gap: clamp(16px, 2.4vw, 36px);
   margin-top: clamp(100px, 14vh, 170px);
 }
 
 .field {
   min-width: 0;
-}
-
-.naming-controls {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: inherit;
-  width: min(100%, 540px);
 }
 
 .field > span {
@@ -187,10 +188,14 @@ h1 {
     box-shadow 160ms ease;
 }
 
+.field select {
+  padding-inline: 14px 8px;
+}
+
 .field input:focus,
 .field select:focus,
 .language-control select:focus,
-.theme-control button:focus-visible,
+.segmented-control button:focus-visible,
 .help-link:focus-visible,
 .result-panel:focus-visible {
   border-color: var(--focus);
@@ -308,16 +313,7 @@ h1 {
 
 @media (max-width: 1050px) {
   .form-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-
-  :where(.form-grid) > .field {
-    grid-column: span 2;
-  }
-
-  .location-field,
-  .municipality-field {
-    grid-column: span 3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .result-panel {
@@ -335,11 +331,6 @@ h1 {
     align-items: flex-start;
   }
 
-  .header-controls {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
   .language-control {
     order: 2;
   }
@@ -350,12 +341,7 @@ h1 {
     margin-top: 68px;
   }
 
-  .field,
-  .location-field,
-  .municipality-field {
-    grid-column: auto;
-  }
-
+  .municipality-field,
   .location-field {
     grid-column: 1 / -1;
   }
@@ -406,15 +392,5 @@ h1 {
   .form-grid {
     grid-template-columns: 1fr;
     margin-top: 52px;
-  }
-
-  .naming-controls {
-    grid-template-columns: 1fr;
-  }
-
-  .field,
-  .location-field,
-  .municipality-field {
-    grid-column: 1;
   }
 }

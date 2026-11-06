@@ -30,10 +30,10 @@ Rollen forkortes til én bokstav (én byte):
 
 Kommunenavnet forkortes etter [kommunetabellen i norske-kommuneforkortelser](https://github.com/wilhel1812/norske-kommuneforkortelser/blob/main/data/kommuner.csv). Listen bygger, der det finnes egnede koder, på etablerte forkortelser fra blant annet UN/LOCODE. Resten er utviklet som en åpen, fellesskapsbasert standard.
 
-Bruk **Nasjonal** til vanlig i Norge. Når du reiser, kan du velge **Internasjonal** og oppgi landet noden hører hjemme i. Landkoden tar to ekstra byte av de 24 som er tilgjengelige.
+Velg landet noden hører hjemme i. **Nasjonal** bruker bare den tre tegn lange kommune- eller stedskoden. Når du reiser, kan du velge **Internasjonal** for å ta med landkoden. Den tar to ekstra byte av de 24 som er tilgjengelige.
 
-- **Norge:** Velg kommunen som vanlig. Generatoren legger `NO` foran kommuneforkortelsen, slik at `OSL` blir `NOOSL`. Dette gjelder også forkortelsene som er utviklet av fellesskapet.
-- **Andre land:** Velg land og skriv inn en stedskode med tre tegn (A–Z eller 2–9). For eksempel blir `STO` med Sverige valgt til `SESTO`. Generatoren viser stedsnavnet når den finner koden i [UNECEs UN/LOCODE-liste](https://unlocode.unece.org/publications/). Du kan også bruke en kode med riktig format uten treff.
+- **Norge:** Velg kommunen som vanlig. I internasjonal modus legger generatoren `NO` foran kommuneforkortelsen, slik at `OSL` blir `NOOSL`. Dette gjelder også forkortelsene som er utviklet av fellesskapet.
+- **Andre land:** Skriv inn en stedskode med tre tegn (A–Z eller 2–9). Med Sverige valgt blir stedskoden `STO` i nasjonal modus og `SESTO` i internasjonal modus. I begge moduser viser generatoren stedsnavnet når den finner koden i [UNECEs UN/LOCODE-liste](https://unlocode.unece.org/publications/). Du kan også bruke en kode med riktig format uten treff.
 
 ## Lokasjon
 

@@ -44,11 +44,11 @@ export default function App() {
   const text = copy[language];
 
   const international = mode === "international";
-  const foreign = international && country !== "NO";
+  const foreign = country !== "NO";
   const validPlaceCode = /^[A-Z2-9]{3}$/.test(placeCode);
   const lookupCountry = foreign && validPlaceCode ? country : "";
-  const norwegianCode = municipality && international ? "NO" + municipality : municipality;
-  const locationCode = foreign ? (lookupCountry ? country + placeCode : "") : norwegianCode;
+  const shortCode = foreign ? (validPlaceCode ? placeCode : "") : municipality;
+  const locationCode = international && shortCode ? country + shortCode : shortCode;
   const countries = useMemo(() => countryOptions(language), [language]);
 
   const result = useMemo(
@@ -115,7 +115,7 @@ export default function App() {
       lookupStatus = text.lookupUnavailable;
     } else {
       const placeName = lookup.names[placeCode];
-      lookupStatus = placeName ? `${locationCode} — ${placeName}` : text.lookupNoMatch;
+      lookupStatus = placeName ? `${country}${placeCode} — ${placeName}` : text.lookupNoMatch;
     }
   }
   const resultStatus = [status, lookupStatus].filter(Boolean).join(" · ");
@@ -137,7 +137,20 @@ export default function App() {
             </select>
           </label>
 
-          <div className="theme-control" aria-label={text.theme}>
+          <div className="segmented-control mode-control" role="group" aria-label={text.mode}>
+            {(["national", "international"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={mode === value}
+                onClick={() => setMode(value)}
+              >
+                {text[value]}
+              </button>
+            ))}
+          </div>
+
+          <div className="segmented-control theme-control" role="group" aria-label={text.theme}>
             {(
               [
                 ["system", Monitor, text.system],
@@ -148,7 +161,6 @@ export default function App() {
               <button
                 key={value}
                 type="button"
-                className={theme === value ? "active" : ""}
                 aria-label={label}
                 aria-pressed={theme === value}
                 title={label}
@@ -173,41 +185,6 @@ export default function App() {
       </header>
 
       <section className="form-grid" aria-label={text.title}>
-        <div className="naming-controls">
-          <label className="field">
-            <span>{text.mode}</span>
-            <select
-              value={mode}
-              onChange={(event) => {
-                setMode(event.target.value as NamingMode);
-                setLookup(undefined);
-              }}
-            >
-              <option value="national">{text.national}</option>
-              <option value="international">{text.international}</option>
-            </select>
-          </label>
-          {international && (
-            <label className="field">
-              <span>{text.country}</span>
-              <select
-                value={country}
-                onChange={(event) => {
-                  setCountry(event.target.value);
-                  setPlaceCode("");
-                  setLookup(undefined);
-                }}
-              >
-                {countries.map(({ code, name }) => (
-                  <option key={code} value={code}>
-                    {name} ({code})
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-        </div>
-
         <label className="field role-field">
           <span>
             {text.role} <b aria-hidden="true">*</b>
@@ -221,6 +198,24 @@ export default function App() {
             {roles.map((item) => (
               <option key={item.code} value={item.code}>
                 {item.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span>{text.country}</span>
+          <select
+            value={country}
+            onChange={(event) => {
+              setCountry(event.target.value);
+              setPlaceCode("");
+              setLookup(undefined);
+            }}
+          >
+            {countries.map(({ code, name }) => (
+              <option key={code} value={code}>
+                {name} ({code})
               </option>
             ))}
           </select>
