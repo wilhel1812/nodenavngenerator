@@ -30,6 +30,11 @@ Rollen forkortes til én bokstav (én byte):
 
 Kommunenavnet forkortes etter [kommunetabellen i norske-kommuneforkortelser](https://github.com/wilhel1812/norske-kommuneforkortelser/blob/main/data/kommuner.csv). Listen bygger, der det finnes egnede koder, på etablerte forkortelser fra blant annet UN/LOCODE. Resten er utviklet som en åpen, fellesskapsbasert standard.
 
+Bruk **Nasjonal** til vanlig i Norge. Når du reiser, kan du velge **Internasjonal** og oppgi landet noden hører hjemme i. Landkoden tar to ekstra byte av de 24 som er tilgjengelige.
+
+- **Norge:** Velg kommunen som vanlig. Generatoren legger `NO` foran kommuneforkortelsen, slik at `OSL` blir `NOOSL`. Dette gjelder også forkortelsene som er utviklet av fellesskapet.
+- **Andre land:** Velg land og skriv inn en stedskode med tre tegn (A–Z eller 2–9). For eksempel blir `STO` med Sverige valgt til `SESTO`. Generatoren viser stedsnavnet når den finner koden i [UNECEs UN/LOCODE-liste](https://unlocode.unece.org/publications/). Du kan også bruke en kode med riktig format uten treff.
+
 ## Lokasjon
 
 Oppgi lokasjonen så nøyaktig du selv ønsker. Den skal gi en indikasjon på hvor noden står, men trenger ikke beskrive den nøyaktige plasseringen. Av hensyn til privatliv og nodens sikkerhet kan det være greit å beskrive et generelt område.
@@ -45,6 +50,14 @@ Eier er valgfritt og gjør det lettere å se hvilke noder som har samme eier. Tr
 `R-OSL-Tryvann-LA8PV`
 
 En router på Tryvann i Oslo, driftet av LA8PV. Navnet er på 19 byte.
+
+`R-NOOSL-TRYVANN-LA8PV`
+
+Samme node i internasjonal modus. Navnet er på 21 byte.
+
+`C-SESTO-SÖDERMALM-KARI`
+
+En Client på Södermalm i Stockholm. Generatoren viser `SESTO — Stockholm` sammen med resultatet. Nodenavnet er på 23 byte.
 
 `M-VOS-Finne-Kari`
 

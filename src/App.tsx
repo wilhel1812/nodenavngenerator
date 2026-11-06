@@ -10,9 +10,11 @@ import {
 import { copy, type Language } from "./i18n";
 import { municipalities } from "./municipalities";
 import { generateName } from "./nameGenerator";
+import { countryOptions, loadPlaceNames, normalizePlaceCode } from "./placeCodes";
 import { roles } from "./roles";
 
 type Theme = "system" | "light" | "dark";
+type NamingMode = "national" | "international";
 
 function readPreference<T extends string>(key: string, fallback: T): T {
   const value = localStorage.getItem(key);
@@ -27,17 +29,46 @@ export default function App() {
     readPreference("theme", "system"),
   );
   const [role, setRole] = useState("");
+  const [mode, setMode] = useState<NamingMode>("national");
+  const [country, setCountry] = useState("NO");
+  const [placeCode, setPlaceCode] = useState("");
   const [municipality, setMunicipality] = useState("");
   const [location, setLocation] = useState("");
   const [owner, setOwner] = useState("");
   const [suffix, setSuffix] = useState("");
   const [copied, setCopied] = useState(false);
+  const [lookup, setLookup] = useState<{
+    country: string;
+    names: Record<string, string> | null;
+  }>();
   const text = copy[language];
 
+  const international = mode === "international";
+  const foreign = international && country !== "NO";
+  const validPlaceCode = /^[A-Z2-9]{3}$/.test(placeCode);
+  const lookupCountry = foreign && validPlaceCode ? country : "";
+  const norwegianCode = municipality && international ? "NO" + municipality : municipality;
+  const locationCode = foreign ? (lookupCountry ? country + placeCode : "") : norwegianCode;
+  const countries = useMemo(() => countryOptions(language), [language]);
+
   const result = useMemo(
-    () => generateName({ role, municipality, location, owner, suffix }),
-    [role, municipality, location, owner, suffix],
+    () => generateName({ role, municipality: locationCode, location, owner, suffix }),
+    [role, locationCode, location, owner, suffix],
   );
+
+  useEffect(() => {
+    if (!lookupCountry) return;
+    const controller = new AbortController();
+    loadPlaceNames(lookupCountry, controller.signal).then(
+      (names) => {
+        if (!controller.signal.aborted) setLookup({ country: lookupCountry, names });
+      },
+      () => {
+        if (!controller.signal.aborted) setLookup({ country: lookupCountry, names: null });
+      },
+    );
+    return () => controller.abort();
+  }, [lookupCountry]);
 
   useEffect(() => {
     localStorage.setItem("language", language);
@@ -66,13 +97,28 @@ export default function App() {
     setCopied(true);
   }
 
-  const status = result.missingRequired
-    ? text.missing
-    : result.truncated
-      ? text.truncated(result.fullBytes)
-      : !result.copyable
-        ? text.tooLong
-        : null;
+  const invalidPlaceCode = foreign && placeCode !== "" && !validPlaceCode;
+  const status = invalidPlaceCode
+    ? text.invalidPlaceCode
+    : result.missingRequired
+      ? text.missing
+      : result.truncated
+        ? text.truncated(result.fullBytes)
+        : !result.copyable
+          ? text.tooLong
+          : null;
+  let lookupStatus = "";
+  if (lookupCountry) {
+    if (lookup?.country !== lookupCountry) {
+      lookupStatus = text.lookupLoading;
+    } else if (!lookup.names) {
+      lookupStatus = text.lookupUnavailable;
+    } else {
+      const placeName = lookup.names[placeCode];
+      lookupStatus = placeName ? `${locationCode} — ${placeName}` : text.lookupNoMatch;
+    }
+  }
+  const resultStatus = [status, lookupStatus].filter(Boolean).join(" · ");
 
   return (
     <main className="page-shell">
@@ -127,6 +173,41 @@ export default function App() {
       </header>
 
       <section className="form-grid" aria-label={text.title}>
+        <div className="naming-controls">
+          <label className="field">
+            <span>{text.mode}</span>
+            <select
+              value={mode}
+              onChange={(event) => {
+                setMode(event.target.value as NamingMode);
+                setLookup(undefined);
+              }}
+            >
+              <option value="national">{text.national}</option>
+              <option value="international">{text.international}</option>
+            </select>
+          </label>
+          {international && (
+            <label className="field">
+              <span>{text.country}</span>
+              <select
+                value={country}
+                onChange={(event) => {
+                  setCountry(event.target.value);
+                  setPlaceCode("");
+                  setLookup(undefined);
+                }}
+              >
+                {countries.map(({ code, name }) => (
+                  <option key={code} value={code}>
+                    {name} ({code})
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+
         <label className="field role-field">
           <span>
             {text.role} <b aria-hidden="true">*</b>
@@ -147,20 +228,33 @@ export default function App() {
 
         <label className="field municipality-field">
           <span>
-            {text.municipality} <b aria-hidden="true">*</b>
+            {foreign ? text.placeCode : text.municipality} <b aria-hidden="true">*</b>
           </span>
-          <select
-            data-testid="municipality"
-            value={municipality}
-            onChange={(event) => setMunicipality(event.target.value)}
-          >
-            <option value="">{text.chooseMunicipality}</option>
-            {municipalities.map((item) => (
-              <option key={item.number} value={item.code}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          {foreign ? (
+            <input
+              value={placeCode}
+              onChange={(event) => setPlaceCode(normalizePlaceCode(event.target.value))}
+              placeholder="STO"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-invalid={invalidPlaceCode || undefined}
+              aria-describedby="result-status"
+            />
+          ) : (
+            <select
+              data-testid="municipality"
+              value={municipality}
+              onChange={(event) => setMunicipality(event.target.value)}
+            >
+              <option value="">{text.chooseMunicipality}</option>
+              {municipalities.map((item) => (
+                <option key={item.number} value={item.code}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
 
         <label className="field location-field">
@@ -205,7 +299,7 @@ export default function App() {
         }`}
         onClick={copyName}
         disabled={!result.copyable}
-        aria-describedby="result-status"
+        aria-describedby={resultStatus ? "result-status" : undefined}
       >
         <span className="result-name">
           {result.displayName || <span aria-hidden="true">—</span>}
@@ -221,9 +315,9 @@ export default function App() {
         <span className="byte-count">
           {text.byteCount(result.displayBytes)}
         </span>
-        {status && (
-          <span className="status-message" id="result-status">
-            {status}
+        {(foreign || resultStatus) && (
+          <span className="status-message" id="result-status" aria-live="polite">
+            {resultStatus}
           </span>
         )}
       </button>
