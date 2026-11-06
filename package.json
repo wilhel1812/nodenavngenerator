@@ -1,6 +1,6 @@
 {
   "name": "nodenavngenerator",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "license": "GPL-3.0-only",
   "type": "module",
@@ -24,7 +24,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.7.2",
-    "vite": "^6.0.5",
+    "vite": "^6.4.4",
     "vitest": "^5.0.5"
   }
 }
