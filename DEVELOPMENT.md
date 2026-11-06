@@ -4,6 +4,22 @@ Generatoren bygger navn fra rolle, kommune, lokasjon, eier og valgfritt suffiks.
 
 Kommuneregisteret hentes som en versjonslåst avhengighet fra [norske-kommuneforkortelser](https://github.com/wilhel1812/norske-kommuneforkortelser). En automatisert jobb holder avhengigheten oppdatert.
 
+## UN/LOCODE-oppslag
+
+Stedskoder og stedsnavn utenfor Norge er hentet fra **UN/LOCODE 2025-1**, utgitt av United Nations Economic Commission for Europe (UNECE). Se [UNECEs publisering](https://unlocode.unece.org/publications/) og [kilderegisteret](https://opensource.unicc.org/un/unece/uncefact/vocab-locode).
+
+Generatoren laster bare oppslagsfilen for valgt land når en fullstendig kode er angitt. Filene inneholder kode og stedsnavn. Importen utelater koder merket for sletting og beholder det første publiserte navnet hvis en kode har flere navn.
+
+Importen lager også ett eksempel per land for plassholderne i skjemaet. Steder i eksempeloversikten i importskriptet bruker et nabolag eller landemerke. For øvrige land brukes den første oppføringen med lufttransport, eller den første gyldige oppføringen dersom ingen har lufttransport.
+
+For å oppdatere, last ned produksjonsutgaven som ZIP fra UNECE. Kjør importen med utgavenummeret fra publiseringssiden og stien til ZIP-filen:
+
+```sh
+python3 scripts/import-unlocode.py 2025-1 /sti/til/unece-release.zip
+```
+
+Kontroller endringene i `src/unlocode.json` og `public/unlocode/`. Fjern mappen for den gamle utgaven når den nye erstatter den. SHA-256 for ZIP-filen som ble brukt til 2025-1 er `ad409fc7149b10f98d61190c34d9daf78b78bb8b31464cc66de1a89d09b01b5d`.
+
 ## Kom i gang
 
 ```sh

@@ -52,6 +52,19 @@ describe("name generator", () => {
     expect(result.displayName).not.toContain("📡");
   });
 
+  it("keeps a five-character place code when only the international name needs shortening", () => {
+    const input = { ...complete, location: "Tryvann12" };
+    const national = generateName(input);
+    const international = generateName({ ...input, municipality: "NOOSL" });
+
+    expect(national.displayBytes).toBe(24);
+    expect(national.truncated).toBe(false);
+    expect(international.fullBytes).toBe(26);
+    expect(international.displayName).toBe("R-NOOSL-TRYVANN-LA8PV-MM");
+    expect(international.displayBytes).toBe(24);
+    expect(international.copyable).toBe(true);
+  });
+
   it("cannot copy when preserved fields leave no room for location", () => {
     const result = generateName({
       ...complete,

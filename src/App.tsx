@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Check,
+  ChevronRight,
   CircleHelp,
   Copy,
   Monitor,
@@ -9,10 +10,12 @@ import {
 } from "lucide-react";
 import { copy, type Language } from "./i18n";
 import { municipalities } from "./municipalities";
-import { generateName } from "./nameGenerator";
+import { generateName, normalizeSegment } from "./nameGenerator";
+import { countryOptions, loadPlaceNames, normalizePlaceCode, placeExamples } from "./placeCodes";
 import { roles } from "./roles";
 
 type Theme = "system" | "light" | "dark";
+type NamingMode = "national" | "international";
 
 function readPreference<T extends string>(key: string, fallback: T): T {
   const value = localStorage.getItem(key);
@@ -27,17 +30,53 @@ export default function App() {
     readPreference("theme", "system"),
   );
   const [role, setRole] = useState("");
+  const [mode, setMode] = useState<NamingMode>("national");
+  const [country, setCountry] = useState("NO");
+  const [placeCode, setPlaceCode] = useState("");
   const [municipality, setMunicipality] = useState("");
   const [location, setLocation] = useState("");
   const [owner, setOwner] = useState("");
   const [suffix, setSuffix] = useState("");
   const [copied, setCopied] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [lookup, setLookup] = useState<{
+    country: string;
+    names: Record<string, string> | null;
+  }>();
   const text = copy[language];
 
+  const international = mode === "international";
+  const foreign = country !== "NO";
+  const validPlaceCode = /^[A-Z2-9]{3}$/.test(placeCode);
+  const lookupCountry = foreign && validPlaceCode ? country : "";
+  const shortCode = foreign ? (validPlaceCode ? placeCode : "") : municipality;
+  const locationCode = international && shortCode ? country + shortCode : shortCode;
+  const countries = useMemo(() => countryOptions(language), [language]);
+  const example = placeExamples[country];
+  const advancedState = [
+    foreign && (countries.find(({ code }) => code === country)?.name ?? country),
+    international && text.international,
+    normalizeSegment(suffix) && text.suffixSet,
+  ].filter(Boolean).join(" · ");
+
   const result = useMemo(
-    () => generateName({ role, municipality, location, owner, suffix }),
-    [role, municipality, location, owner, suffix],
+    () => generateName({ role, municipality: locationCode, location, owner, suffix }),
+    [role, locationCode, location, owner, suffix],
   );
+
+  useEffect(() => {
+    if (!lookupCountry) return;
+    const controller = new AbortController();
+    loadPlaceNames(lookupCountry, controller.signal).then(
+      (names) => {
+        if (!controller.signal.aborted) setLookup({ country: lookupCountry, names });
+      },
+      () => {
+        if (!controller.signal.aborted) setLookup({ country: lookupCountry, names: null });
+      },
+    );
+    return () => controller.abort();
+  }, [lookupCountry]);
 
   useEffect(() => {
     localStorage.setItem("language", language);
@@ -66,13 +105,28 @@ export default function App() {
     setCopied(true);
   }
 
-  const status = result.missingRequired
-    ? text.missing
-    : result.truncated
-      ? text.truncated(result.fullBytes)
-      : !result.copyable
-        ? text.tooLong
-        : null;
+  const invalidPlaceCode = foreign && placeCode !== "" && !validPlaceCode;
+  const status = invalidPlaceCode
+    ? text.invalidPlaceCode
+    : result.missingRequired
+      ? text.missing
+      : result.truncated
+        ? text.truncated(result.fullBytes)
+        : !result.copyable
+          ? text.tooLong
+          : null;
+  let lookupStatus = "";
+  if (lookupCountry) {
+    if (lookup?.country !== lookupCountry) {
+      lookupStatus = text.lookupLoading;
+    } else if (!lookup.names) {
+      lookupStatus = text.lookupUnavailable;
+    } else {
+      const placeName = lookup.names[placeCode];
+      lookupStatus = placeName ? `${country}${placeCode} — ${placeName}` : text.lookupNoMatch;
+    }
+  }
+  const resultStatus = [status, lookupStatus].filter(Boolean).join(" · ");
 
   return (
     <main className="page-shell">
@@ -91,7 +145,7 @@ export default function App() {
             </select>
           </label>
 
-          <div className="theme-control" aria-label={text.theme}>
+          <div className="segmented-control theme-control" role="group" aria-label={text.theme}>
             {(
               [
                 ["system", Monitor, text.system],
@@ -102,7 +156,6 @@ export default function App() {
               <button
                 key={value}
                 type="button"
-                className={theme === value ? "active" : ""}
                 aria-label={label}
                 aria-pressed={theme === value}
                 title={label}
@@ -127,7 +180,7 @@ export default function App() {
       </header>
 
       <section className="form-grid" aria-label={text.title}>
-        <label className="field role-field">
+        <label className="field">
           <span>
             {text.role} <b aria-hidden="true">*</b>
           </span>
@@ -145,25 +198,38 @@ export default function App() {
           </select>
         </label>
 
-        <label className="field municipality-field">
+        <label className="field">
           <span>
-            {text.municipality} <b aria-hidden="true">*</b>
+            {foreign ? text.placeCode : text.municipality} <b aria-hidden="true">*</b>
           </span>
-          <select
-            data-testid="municipality"
-            value={municipality}
-            onChange={(event) => setMunicipality(event.target.value)}
-          >
-            <option value="">{text.chooseMunicipality}</option>
-            {municipalities.map((item) => (
-              <option key={item.number} value={item.code}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          {foreign ? (
+            <input
+              value={placeCode}
+              onChange={(event) => setPlaceCode(normalizePlaceCode(event.target.value))}
+              placeholder={example?.code}
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-invalid={invalidPlaceCode || undefined}
+              aria-describedby="result-status"
+            />
+          ) : (
+            <select
+              data-testid="municipality"
+              value={municipality}
+              onChange={(event) => setMunicipality(event.target.value)}
+            >
+              <option value="">{text.chooseMunicipality}</option>
+              {municipalities.map((item) => (
+                <option key={item.number} value={item.code}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
 
-        <label className="field location-field">
+        <label className="field">
           <span>
             {text.location} <b aria-hidden="true">*</b>
           </span>
@@ -171,7 +237,7 @@ export default function App() {
             data-testid="location"
             value={location}
             onChange={(event) => setLocation(event.target.value)}
-            placeholder={text.locationPlaceholder}
+            placeholder={foreign ? example?.location : text.locationPlaceholder}
             autoComplete="off"
           />
         </label>
@@ -186,16 +252,6 @@ export default function App() {
             autoComplete="off"
           />
         </label>
-
-        <label className="field">
-          <span>{text.suffix}</span>
-          <input
-            data-testid="suffix"
-            value={suffix}
-            onChange={(event) => setSuffix(event.target.value)}
-            autoComplete="off"
-          />
-        </label>
       </section>
 
       <button
@@ -205,7 +261,7 @@ export default function App() {
         }`}
         onClick={copyName}
         disabled={!result.copyable}
-        aria-describedby="result-status"
+        aria-describedby={resultStatus ? "result-status" : undefined}
       >
         <span className="result-name">
           {result.displayName || <span aria-hidden="true">—</span>}
@@ -221,9 +277,9 @@ export default function App() {
         <span className="byte-count">
           {text.byteCount(result.displayBytes)}
         </span>
-        {status && (
-          <span className="status-message" id="result-status">
-            {status}
+        {(foreign || resultStatus) && (
+          <span className="status-message" id="result-status" aria-live="polite">
+            {resultStatus}
           </span>
         )}
       </button>
@@ -244,6 +300,70 @@ export default function App() {
             .join(" ")}
         </p>
       )}
+
+      <div className="advanced-options">
+        <button
+          className="advanced-toggle"
+          type="button"
+          aria-expanded={advancedOpen}
+          aria-controls="advanced-settings"
+          onClick={() => setAdvancedOpen((open) => !open)}
+        >
+          <ChevronRight aria-hidden="true" />
+          <span>
+            {text.advanced}
+            {!advancedOpen && advancedState && <span className="advanced-state"> · {advancedState}</span>}
+          </span>
+        </button>
+        <div className="advanced-panel" id="advanced-settings" inert={!advancedOpen}>
+          <div className="advanced-clip">
+            <div className="advanced-fields">
+              <div className="country-settings">
+                <label className="field">
+                  <span>{text.country}</span>
+                  <select
+                    value={country}
+                    onChange={(event) => {
+                      setCountry(event.target.value);
+                      setPlaceCode("");
+                      setLookup(undefined);
+                    }}
+                  >
+                    {countries.map(({ code, name }) => (
+                      <option key={code} value={code}>
+                        {name} ({code})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="segmented-control mode-control" role="group" aria-label={text.mode}>
+                  {(["national", "international"] as const).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={mode === value}
+                      onClick={() => setMode(value)}
+                    >
+                      {text[value]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="field">
+                <span>{text.suffix}</span>
+                <input
+                  data-testid="suffix"
+                  value={suffix}
+                  onChange={(event) => setSuffix(event.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

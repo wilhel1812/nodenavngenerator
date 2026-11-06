@@ -19,16 +19,17 @@ Rollen forkortes til én bokstav (én byte):
 | B | CLIENT_BASE |
 | C | CLIENT |
 | M | CLIENT_MUTE |
-| H | CLIENT_HIDDEN |
-| S | SENSOR |
-| T | TRACKER |
-| F | LOST_AND_FOUND |
-| K | TAK |
-| E | TAK_TRACKER |
 
 ## Kommune
 
 Kommunenavnet forkortes etter [kommunetabellen i norske-kommuneforkortelser](https://github.com/wilhel1812/norske-kommuneforkortelser/blob/main/data/kommuner.csv). Listen bygger, der det finnes egnede koder, på etablerte forkortelser fra blant annet UN/LOCODE. Resten er utviklet som en åpen, fellesskapsbasert standard.
+
+Generatoren starter med Norge i **Nasjonal** modus og bruker den tre tegn lange kommunekoden. Åpne **Avanserte valg** for å velge et annet land, bytte til **Internasjonal** eller legge til et suffiks. Internasjonal modus legger til landkoden, som tar to ekstra byte av de 24 som er tilgjengelige.
+
+- **Norge:** Velg kommunen som vanlig. I internasjonal modus legger generatoren `NO` foran kommuneforkortelsen, slik at `OSL` blir `NOOSL`. Dette gjelder også forkortelsene som er utviklet av fellesskapet.
+- **Andre land:** Skriv inn en stedskode med tre tegn (A–Z eller 2–9). Med Sverige valgt blir stedskoden `STO` i nasjonal modus og `SESTO` i internasjonal modus. I begge moduser viser generatoren stedsnavnet når den finner koden i [UNECEs UN/LOCODE-liste](https://unlocode.unece.org/publications/). Du kan også bruke en kode med riktig format uten treff.
+
+Eksempeltekst i feltene følger valgt land. For Sverige viser generatoren for eksempel `STO` og `Södermalm`. Skriv inn koden og lokasjonen du vil bruke.
 
 ## Lokasjon
 
@@ -45,6 +46,14 @@ Eier er valgfritt og gjør det lettere å se hvilke noder som har samme eier. Tr
 `R-OSL-Tryvann-LA8PV`
 
 En router på Tryvann i Oslo, driftet av LA8PV. Navnet er på 19 byte.
+
+`R-NOOSL-TRYVANN-LA8PV`
+
+Samme node i internasjonal modus. Navnet er på 21 byte.
+
+`C-SESTO-SÖDERMALM-KARI`
+
+En Client på Södermalm i Stockholm. Generatoren viser `SESTO — Stockholm` sammen med resultatet. Nodenavnet er på 23 byte.
 
 `M-VOS-Finne-Kari`
 

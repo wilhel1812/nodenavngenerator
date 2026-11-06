@@ -81,11 +81,13 @@ h1 {
 .header-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 12px;
 }
 
 .language-control select,
-.theme-control,
+.segmented-control,
 .help-link {
   min-height: 42px;
   border: 1px solid var(--border);
@@ -99,12 +101,12 @@ h1 {
   padding: 0 34px 0 12px;
 }
 
-.theme-control {
+.segmented-control {
   display: flex;
   padding: 3px;
 }
 
-.theme-control button,
+.segmented-control button,
 .help-link {
   display: inline-grid;
   place-items: center;
@@ -115,13 +117,20 @@ h1 {
   color: var(--muted);
 }
 
-.theme-control button {
+.segmented-control button {
   min-height: 34px;
 }
 
-.theme-control button.active {
+.segmented-control button[aria-pressed="true"] {
   background: var(--text);
   color: var(--background);
+}
+
+.mode-control button {
+  width: auto;
+  padding-inline: 10px;
+  font-size: 0.85rem;
+  font-weight: 650;
 }
 
 .theme-control svg,
@@ -138,8 +147,7 @@ h1 {
 .form-grid {
   display: grid;
   grid-template-columns:
-    minmax(160px, 0.85fr) minmax(210px, 1.15fr) minmax(230px, 1.4fr)
-    minmax(180px, 1fr) minmax(150px, 0.85fr);
+    minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.4fr) minmax(0, 1fr);
   gap: clamp(16px, 2.4vw, 36px);
   margin-top: clamp(100px, 14vh, 170px);
 }
@@ -179,10 +187,101 @@ h1 {
     box-shadow 160ms ease;
 }
 
+.field select {
+  padding-inline: 14px 8px;
+}
+
+.advanced-options {
+  margin-top: 20px;
+}
+
+.advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-align: left;
+}
+
+.advanced-toggle svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  transition: transform 220ms ease;
+}
+
+.advanced-toggle[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.advanced-state {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.advanced-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 220ms ease, visibility 0s 220ms;
+}
+
+.advanced-toggle[aria-expanded="true"] + .advanced-panel {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.advanced-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advanced-panel,
+  .advanced-toggle svg {
+    transition: none;
+  }
+}
+
+.advanced-fields,
+.country-settings {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.advanced-fields {
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 12px 4px 4px;
+}
+
+.advanced-fields .field {
+  width: 250px;
+  max-width: 100%;
+}
+
+.advanced-fields .field > span {
+  margin-bottom: 10px;
+}
+
+.advanced-fields .field :is(input, select) {
+  height: 42px;
+  font-size: 1rem;
+}
+
 .field input:focus,
 .field select:focus,
 .language-control select:focus,
-.theme-control button:focus-visible,
+.segmented-control button:focus-visible,
+.advanced-toggle:focus-visible,
 .help-link:focus-visible,
 .result-panel:focus-visible {
   border-color: var(--focus);
@@ -299,19 +398,6 @@ h1 {
 }
 
 @media (max-width: 1050px) {
-  .form-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-
-  .field {
-    grid-column: span 2;
-  }
-
-  .location-field,
-  .municipality-field {
-    grid-column: span 3;
-  }
-
   .result-panel {
     padding-inline: 110px;
   }
@@ -327,11 +413,6 @@ h1 {
     align-items: flex-start;
   }
 
-  .header-controls {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
   .language-control {
     order: 2;
   }
@@ -342,14 +423,15 @@ h1 {
     margin-top: 68px;
   }
 
-  .field,
-  .location-field,
-  .municipality-field {
-    grid-column: auto;
+  .advanced-fields,
+  .country-settings {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .location-field {
-    grid-column: 1 / -1;
+  .country-settings,
+  .advanced-fields .field {
+    width: 100%;
   }
 
   .field > span {
@@ -398,11 +480,5 @@ h1 {
   .form-grid {
     grid-template-columns: 1fr;
     margin-top: 52px;
-  }
-
-  .field,
-  .location-field,
-  .municipality-field {
-    grid-column: 1;
   }
 }
