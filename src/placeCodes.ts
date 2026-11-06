@@ -1,6 +1,9 @@
 import reference from "./unlocode.json";
 import type { Language } from "./i18n";
 
+export const placeExamples: Readonly<Record<string, { code: string; location: string } | undefined>> =
+  reference.examples;
+
 export function countryOptions(language: Language) {
   const names = new Intl.DisplayNames([language], { type: "region" });
   const collator = new Intl.Collator(language);

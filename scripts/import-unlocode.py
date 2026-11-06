@@ -9,6 +9,31 @@ import re
 import zipfile
 
 
+# Pick a familiar neighborhood or landmark for these common examples.
+EXAMPLES = {
+    "AT": ("VIE", "Schönbrunn"),
+    "AU": ("SYD", "Circular Quay"),
+    "BE": ("BRU", "Grand-Place"),
+    "CH": ("ZRH", "Lindenhof"),
+    "CO": ("BOG", "Monserrate"),
+    "DE": ("BER", "Brandenburger Tor"),
+    "DK": ("CPH", "Nyhavn"),
+    "ES": ("MAD", "Retiro"),
+    "FI": ("HEL", "Suomenlinna"),
+    "FR": ("PAR", "Montmartre"),
+    "GB": ("LON", "Westminster"),
+    "GR": ("ATH", "Akropolis"),
+    "IS": ("REY", "Hallgrímskirkja"),
+    "IT": ("ROM", "Colosseo"),
+    "JP": ("TYO", "Shibuya"),
+    "NL": ("AMS", "Jordaan"),
+    "PL": ("WAW", "Łazienki"),
+    "PT": ("LIS", "Belém"),
+    "SE": ("STO", "Södermalm"),
+    "US": ("NYC", "Central Park"),
+}
+
+
 def write_json(path, value):
     path.write_text(
         json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n",
@@ -19,27 +44,45 @@ def write_json(path, value):
 def import_release(edition, source):
     root = Path(__file__).resolve().parents[1]
     places = {}
+    hubs = {}
     with zipfile.ZipFile(source) as archive:
         for part in range(1, 4):
             path = f"release/csv/UNLOCODE CodeListPart{part}.csv"
             with io.TextIOWrapper(archive.open(path), encoding="utf-8-sig", newline="") as file:
-                for change, country, code, name, *_ in csv.reader(file):
+                for change, country, code, name, _, _, functions, *_ in csv.reader(file):
                     if not re.fullmatch("[A-Z]{2}", country):
                         raise ValueError(f"Unexpected country {country!r} in {path}")
                     names = places.setdefault(country, {})
                     if change != "X" and re.fullmatch("[A-Z2-9]{3}", code) and name:
                         # Some codes have alternate names. Keep the first published name.
                         names.setdefault(code, name)
+                        if "4" in functions:
+                            hubs.setdefault(country, code)
 
     if "NO" not in places or len(places) < 200:
         raise ValueError("Incomplete UNECE country list")
     countries = sorted(places)
     del places["NO"]
+    examples = {}
+    for country, names in sorted(places.items()):
+        if country in EXAMPLES:
+            code, location = EXAMPLES[country]
+            if code not in names:
+                raise ValueError(f"Example {country}{code} is missing from the release")
+        elif names:
+            code = hubs.get(country) or next(iter(names))
+            location = names[code].strip()
+        else:
+            continue
+        examples[country] = {"code": code, "location": location}
+
     output = root / "public" / "unlocode" / edition
     output.mkdir(parents=True, exist_ok=True)
     for country in sorted(places):
         write_json(output / f"{country}.json", dict(sorted(places[country].items())))
-    write_json(root / "src" / "unlocode.json", {"edition": edition, "countries": countries})
+    write_json(root / "src" / "unlocode.json", {
+        "edition": edition, "countries": countries, "examples": examples,
+    })
     print(f"Imported {sum(map(len, places.values())):,} names from {len(places)} countries and territories")
 
 

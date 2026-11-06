@@ -147,8 +147,8 @@ h1 {
 .form-grid {
   display: grid;
   grid-template-columns:
-    minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.25fr)
-    minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.85fr);
+    minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.4fr)
+    minmax(0, 1fr) minmax(0, 0.85fr);
   gap: clamp(16px, 2.4vw, 36px);
   margin-top: clamp(100px, 14vh, 170px);
 }
@@ -190,6 +190,26 @@ h1 {
 
 .field select {
   padding-inline: 14px 8px;
+}
+
+.country-settings {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.country-settings .field {
+  width: min(100%, 250px);
+}
+
+.country-settings .field > span {
+  margin-bottom: 10px;
+}
+
+.country-settings .field select {
+  height: 42px;
+  font-size: 1rem;
 }
 
 .field input:focus,
@@ -339,6 +359,15 @@ h1 {
     grid-template-columns: 1fr 1fr;
     gap: 20px 14px;
     margin-top: 68px;
+  }
+
+  .country-settings {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .country-settings .field {
+    width: 100%;
   }
 
   .municipality-field,

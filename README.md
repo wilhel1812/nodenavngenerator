@@ -35,6 +35,8 @@ Velg landet noden hører hjemme i. **Nasjonal** bruker bare den tre tegn lange k
 - **Norge:** Velg kommunen som vanlig. I internasjonal modus legger generatoren `NO` foran kommuneforkortelsen, slik at `OSL` blir `NOOSL`. Dette gjelder også forkortelsene som er utviklet av fellesskapet.
 - **Andre land:** Skriv inn en stedskode med tre tegn (A–Z eller 2–9). Med Sverige valgt blir stedskoden `STO` i nasjonal modus og `SESTO` i internasjonal modus. I begge moduser viser generatoren stedsnavnet når den finner koden i [UNECEs UN/LOCODE-liste](https://unlocode.unece.org/publications/). Du kan også bruke en kode med riktig format uten treff.
 
+Eksempeltekst i feltene følger valgt land. For Sverige viser generatoren for eksempel `STO` og `Södermalm`. Skriv inn koden og lokasjonen du vil bruke.
+
 ## Lokasjon
 
 Oppgi lokasjonen så nøyaktig du selv ønsker. Den skal gi en indikasjon på hvor noden står, men trenger ikke beskrive den nøyaktige plasseringen. Av hensyn til privatliv og nodens sikkerhet kan det være greit å beskrive et generelt område.

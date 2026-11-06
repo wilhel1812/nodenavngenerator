@@ -10,6 +10,8 @@ Stedskoder og stedsnavn utenfor Norge er hentet fra **UN/LOCODE 2025-1**, utgitt
 
 Generatoren laster bare oppslagsfilen for valgt land når en fullstendig kode er angitt. Filene inneholder kode og stedsnavn. Importen utelater koder merket for sletting og beholder det første publiserte navnet hvis en kode har flere navn.
 
+Importen lager også ett eksempel per land for plassholderne i skjemaet. Steder i eksempeloversikten i importskriptet bruker et nabolag eller landemerke. For øvrige land brukes den første oppføringen med lufttransport, eller den første gyldige oppføringen dersom ingen har lufttransport.
+
 For å oppdatere, last ned produksjonsutgaven som ZIP fra UNECE. Kjør importen med utgavenummeret fra publiseringssiden og stien til ZIP-filen:
 
 ```sh

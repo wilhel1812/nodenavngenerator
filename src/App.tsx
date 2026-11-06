@@ -10,7 +10,7 @@ import {
 import { copy, type Language } from "./i18n";
 import { municipalities } from "./municipalities";
 import { generateName } from "./nameGenerator";
-import { countryOptions, loadPlaceNames, normalizePlaceCode } from "./placeCodes";
+import { countryOptions, loadPlaceNames, normalizePlaceCode, placeExamples } from "./placeCodes";
 import { roles } from "./roles";
 
 type Theme = "system" | "light" | "dark";
@@ -50,6 +50,7 @@ export default function App() {
   const shortCode = foreign ? (validPlaceCode ? placeCode : "") : municipality;
   const locationCode = international && shortCode ? country + shortCode : shortCode;
   const countries = useMemo(() => countryOptions(language), [language]);
+  const example = placeExamples[country];
 
   const result = useMemo(
     () => generateName({ role, municipality: locationCode, location, owner, suffix }),
@@ -137,19 +138,6 @@ export default function App() {
             </select>
           </label>
 
-          <div className="segmented-control mode-control" role="group" aria-label={text.mode}>
-            {(["national", "international"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={mode === value}
-                onClick={() => setMode(value)}
-              >
-                {text[value]}
-              </button>
-            ))}
-          </div>
-
           <div className="segmented-control theme-control" role="group" aria-label={text.theme}>
             {(
               [
@@ -185,6 +173,39 @@ export default function App() {
       </header>
 
       <section className="form-grid" aria-label={text.title}>
+        <div className="country-settings">
+          <label className="field">
+            <span>{text.country}</span>
+            <select
+              value={country}
+              onChange={(event) => {
+                setCountry(event.target.value);
+                setPlaceCode("");
+                setLookup(undefined);
+              }}
+            >
+              {countries.map(({ code, name }) => (
+                <option key={code} value={code}>
+                  {name} ({code})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="segmented-control mode-control" role="group" aria-label={text.mode}>
+            {(["national", "international"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={mode === value}
+                onClick={() => setMode(value)}
+              >
+                {text[value]}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <label className="field role-field">
           <span>
             {text.role} <b aria-hidden="true">*</b>
@@ -203,24 +224,6 @@ export default function App() {
           </select>
         </label>
 
-        <label className="field">
-          <span>{text.country}</span>
-          <select
-            value={country}
-            onChange={(event) => {
-              setCountry(event.target.value);
-              setPlaceCode("");
-              setLookup(undefined);
-            }}
-          >
-            {countries.map(({ code, name }) => (
-              <option key={code} value={code}>
-                {name} ({code})
-              </option>
-            ))}
-          </select>
-        </label>
-
         <label className="field municipality-field">
           <span>
             {foreign ? text.placeCode : text.municipality} <b aria-hidden="true">*</b>
@@ -229,7 +232,7 @@ export default function App() {
             <input
               value={placeCode}
               onChange={(event) => setPlaceCode(normalizePlaceCode(event.target.value))}
-              placeholder="STO"
+              placeholder={example?.code}
               autoComplete="off"
               autoCapitalize="characters"
               spellCheck={false}
@@ -260,7 +263,7 @@ export default function App() {
             data-testid="location"
             value={location}
             onChange={(event) => setLocation(event.target.value)}
-            placeholder={text.locationPlaceholder}
+            placeholder={foreign ? example?.location : text.locationPlaceholder}
             autoComplete="off"
           />
         </label>
