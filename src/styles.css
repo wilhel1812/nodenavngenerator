@@ -147,8 +147,7 @@ h1 {
 .form-grid {
   display: grid;
   grid-template-columns:
-    minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.4fr)
-    minmax(0, 1fr) minmax(0, 0.85fr);
+    minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.4fr) minmax(0, 1fr);
   gap: clamp(16px, 2.4vw, 36px);
   margin-top: clamp(100px, 14vh, 170px);
 }
@@ -192,22 +191,50 @@ h1 {
   padding-inline: 14px 8px;
 }
 
-.country-settings {
+.advanced-options {
   grid-column: 1 / -1;
+}
+
+.advanced-options summary {
+  width: fit-content;
+  padding-block: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.advanced-state {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.advanced-options[open] .advanced-state {
+  display: none;
+}
+
+.advanced-fields,
+.country-settings {
   display: flex;
   align-items: flex-end;
   gap: 12px;
 }
 
-.country-settings .field {
-  width: min(100%, 250px);
+.advanced-fields {
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 12px;
 }
 
-.country-settings .field > span {
+.advanced-fields .field {
+  width: 250px;
+  max-width: 100%;
+}
+
+.advanced-fields .field > span {
   margin-bottom: 10px;
 }
 
-.country-settings .field select {
+.advanced-fields .field :is(input, select) {
   height: 42px;
   font-size: 1rem;
 }
@@ -332,10 +359,6 @@ h1 {
 }
 
 @media (max-width: 1050px) {
-  .form-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .result-panel {
     padding-inline: 110px;
   }
@@ -361,18 +384,15 @@ h1 {
     margin-top: 68px;
   }
 
+  .advanced-fields,
   .country-settings {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .country-settings .field {
+  .country-settings,
+  .advanced-fields .field {
     width: 100%;
-  }
-
-  .municipality-field,
-  .location-field {
-    grid-column: 1 / -1;
   }
 
   .field > span {

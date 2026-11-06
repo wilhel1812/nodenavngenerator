@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { copy, type Language } from "./i18n";
 import { municipalities } from "./municipalities";
-import { generateName } from "./nameGenerator";
+import { generateName, normalizeSegment } from "./nameGenerator";
 import { countryOptions, loadPlaceNames, normalizePlaceCode, placeExamples } from "./placeCodes";
 import { roles } from "./roles";
 
@@ -51,6 +51,11 @@ export default function App() {
   const locationCode = international && shortCode ? country + shortCode : shortCode;
   const countries = useMemo(() => countryOptions(language), [language]);
   const example = placeExamples[country];
+  const advancedState = [
+    foreign && (countries.find(({ code }) => code === country)?.name ?? country),
+    international && text.international,
+    normalizeSegment(suffix) && text.suffixSet,
+  ].filter(Boolean).join(" · ");
 
   const result = useMemo(
     () => generateName({ role, municipality: locationCode, location, owner, suffix }),
@@ -173,40 +178,7 @@ export default function App() {
       </header>
 
       <section className="form-grid" aria-label={text.title}>
-        <div className="country-settings">
-          <label className="field">
-            <span>{text.country}</span>
-            <select
-              value={country}
-              onChange={(event) => {
-                setCountry(event.target.value);
-                setPlaceCode("");
-                setLookup(undefined);
-              }}
-            >
-              {countries.map(({ code, name }) => (
-                <option key={code} value={code}>
-                  {name} ({code})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div className="segmented-control mode-control" role="group" aria-label={text.mode}>
-            {(["national", "international"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={mode === value}
-                onClick={() => setMode(value)}
-              >
-                {text[value]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <label className="field role-field">
+        <label className="field">
           <span>
             {text.role} <b aria-hidden="true">*</b>
           </span>
@@ -224,7 +196,7 @@ export default function App() {
           </select>
         </label>
 
-        <label className="field municipality-field">
+        <label className="field">
           <span>
             {foreign ? text.placeCode : text.municipality} <b aria-hidden="true">*</b>
           </span>
@@ -255,7 +227,7 @@ export default function App() {
           )}
         </label>
 
-        <label className="field location-field">
+        <label className="field">
           <span>
             {text.location} <b aria-hidden="true">*</b>
           </span>
@@ -279,15 +251,56 @@ export default function App() {
           />
         </label>
 
-        <label className="field">
-          <span>{text.suffix}</span>
-          <input
-            data-testid="suffix"
-            value={suffix}
-            onChange={(event) => setSuffix(event.target.value)}
-            autoComplete="off"
-          />
-        </label>
+        <details className="advanced-options">
+          <summary>
+            {text.advanced}
+            {advancedState && <span className="advanced-state"> · {advancedState}</span>}
+          </summary>
+          <div className="advanced-fields">
+            <div className="country-settings">
+              <label className="field">
+                <span>{text.country}</span>
+                <select
+                  value={country}
+                  onChange={(event) => {
+                    setCountry(event.target.value);
+                    setPlaceCode("");
+                    setLookup(undefined);
+                  }}
+                >
+                  {countries.map(({ code, name }) => (
+                    <option key={code} value={code}>
+                      {name} ({code})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="segmented-control mode-control" role="group" aria-label={text.mode}>
+                {(["national", "international"] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={mode === value}
+                    onClick={() => setMode(value)}
+                  >
+                    {text[value]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label className="field">
+              <span>{text.suffix}</span>
+              <input
+                data-testid="suffix"
+                value={suffix}
+                onChange={(event) => setSuffix(event.target.value)}
+                autoComplete="off"
+              />
+            </label>
+          </div>
+        </details>
       </section>
 
       <button

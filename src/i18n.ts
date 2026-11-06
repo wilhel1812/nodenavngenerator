@@ -4,6 +4,8 @@ export const copy = {
   nb: {
     title: "Nodenavngenerator",
     mode: "Modus",
+    advanced: "Avanserte valg",
+    suffixSet: "Suffiks angitt",
     national: "Nasjonal",
     international: "Internasjonal",
     country: "Land",
@@ -46,6 +48,8 @@ export const copy = {
   en: {
     title: "Node name generator",
     mode: "Mode",
+    advanced: "Advanced options",
+    suffixSet: "Suffix set",
     national: "National",
     international: "International",
     country: "Country",
